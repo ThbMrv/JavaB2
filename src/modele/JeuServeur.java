@@ -100,7 +100,6 @@ public class JeuServeur extends Jeu implements Global {
 	}
 
 
-
 	@Override
 	public void reception(Connection connection, Object info) {
 		String[] infos = ((String)info).split(SEPARE) ;
@@ -174,20 +173,20 @@ public class JeuServeur extends Jeu implements Global {
 	        return;
 	    }
 
-	    // ✅ Reset uniquement le joueur qui a marqué
-	    int index = lesJoueursDansLordre.indexOf(joueur);
-	    int xSpawn = (index == 0) ? 0 : (NBMURS - 1) * L_MUR;
-	    int ySpawn = (H_ARENE / 2) - H_PERSO - H_MUR;
-	    joueur.setPosX(xSpawn);
-	    joueur.setPosY(ySpawn);
-	    joueur.affiche(MARCHE, 1);
+	    // ✅ Tous les joueurs respawnent et sont soignés
+	    for (int i = 0; i < lesJoueursDansLordre.size(); i++) {
+	        Joueur j = lesJoueursDansLordre.get(i);
+	        int xSpawn = (i == 0) ? 0 : (NBMURS - 1) * L_MUR;
+	        int ySpawn = (H_ARENE / 2) - H_PERSO - H_MUR;
 
-	    // ✅ Bloque TOUS les joueurs
-	    for (Joueur j : lesJoueursDansLordre) {
-	        j.setBloque(true);
+	        j.setPosX(xSpawn);
+	        j.setPosY(ySpawn);
+	        j.setVie(10);              // 💖 On remet la vie à 10
+	        j.affiche(MARCHE, 1);
+	        j.setBloque(true);         // ⏸ On bloque pour respawn
 	    }
 
-	    // ✅ Affiche un seul message de compte à rebours dans le chat
+	    // ✅ Affichage d’un seul message de compte à rebours
 	    new Thread(() -> {
 	        for (int i = 3; i > 0; i--) {
 	            controle.evenementModele(this, "ajout phrase", "⏳ Respawn dans : " + i);
@@ -199,10 +198,11 @@ public class JeuServeur extends Jeu implements Global {
 	        }
 
 	        for (Joueur j : lesJoueursDansLordre) {
-	            j.setBloque(false); // ✅ débloquer tout le monde après 3s
+	            j.setBloque(false); // ✅ Tous les joueurs peuvent rejouer
 	        }
 	    }).start();
 	}
+
 
 	private void startTimer() {
 	    labelTimer = new Label(Label.getNbLabel(), new JLabel());

@@ -86,6 +86,11 @@ public class Joueur extends Objet implements Global {
 		}
 	}
 	
+	public void setVie(int vie) {
+	    this.vie = Math.min(vie, MAXVIE);
+	}
+
+	
 	public boolean estMort() {
 	    return vie == 0;
 	}
@@ -290,8 +295,8 @@ public class Joueur extends Objet implements Global {
 	    }
 
 	    // Vérification des collisions
-	    if (toucheMur(lesMurs) || toucheJoueur(lesJoueurs)) {
-	        position = ancPos; // Revenir à l'ancienne position si collision
+	    if (collisionLaterale(lesMurs, lesJoueurs)) {
+	        position = ancPos;
 	    }
 
 	    // Gestion de l’animation (changement d’image)
@@ -299,6 +304,52 @@ public class Joueur extends Objet implements Global {
 
 	    return position;
 	}
+	
+	public void appliquerGraviteAsync(ArrayList<Mur> lesMurs) {
+	    if (enSaut) return; // ❌ pas de gravité pendant le saut
+
+	    new Thread(() -> {
+	        while (!toucheSol(lesMurs) && posY + H_PERSO < H_ARENE && !enSaut) {
+	            posY += GRAVITE;
+	            corrigerPosition();
+	            affiche(MARCHE, etape);
+
+	            try {
+	                Thread.sleep(15);
+	            } catch (InterruptedException e) {
+	                e.printStackTrace();
+	            }
+	        }
+	    }).start();
+	}
+	
+	private boolean collisionLaterale(ArrayList<Mur> lesMurs, Hashtable<Connection, Joueur> lesJoueurs) {
+	    for (Mur mur : lesMurs) {
+	        if (toucheObjet(mur)) {
+	            // On ignore les collisions si le joueur est clairement au-dessus du mur
+	            if (posY + H_PERSO <= mur.getPosY() + 5) continue;
+	            return true;
+	        }
+	    }
+
+	    for (Joueur joueur : lesJoueurs.values()) {
+	        if (joueur != this && toucheObjet(joueur)) {
+	            return true;
+	        }
+	    }
+
+	    return false;
+	}
+
+	
+	private boolean toucheSol(ArrayList<Mur> lesMurs) {
+	    posY += 1; // On simule un petit déplacement vers le bas
+	    boolean touche = toucheMur(lesMurs);
+	    posY -= 1; // On annule le déplacement test
+	    return touche;
+	}
+
+
 	
 	public void departJoueur(JeuServeur jeuServeur) {
 	    if (label != null && label.getjLabel() != null) { 
@@ -318,25 +369,27 @@ public class Joueur extends Objet implements Global {
 
 	
 	public void action (int action, ArrayList<Mur> lesMurs, Hashtable<Connection, Joueur> lesJoueurs ) {
-		if (bloque) return;
-		switch (action) {
-		case GAUCHE:posX = deplace(action, posX, GAUCHE, -LEPAS, L_ARENE - L_PERSO, lesJoueurs, lesMurs);break;
-        case DROITE:posX = deplace(action, posX, DROITE, LEPAS, L_ARENE - L_PERSO, lesJoueurs, lesMurs);break;
-        case HAUT:posY = deplace(action, posY, orientation, -LEPAS, H_ARENE - H_PERSO, lesJoueurs, lesMurs);break;
-        case BAS:posY = deplace(action, posY, orientation, LEPAS, H_ARENE - H_PERSO, lesJoueurs, lesMurs);break;
-        case TIRE:
-            if (!boule.getLabel().getjLabel().isVisible()) {
-                jeuServeur.envoi(FIGHT); // Envoi du son de tir
-                boule.tireBoule(this, lesMurs, lesJoueurs); // Tir de la boule
-            }
-            break;
-        case SAUT:
-            sauter(lesMurs, lesJoueurs);
-            break;
-		}
+	    if (bloque) return;
 
-		corrigerPosition();
-		affiche(MARCHE, etape);
+	    switch (action) {
+	        case GAUCHE: posX = deplace(action, posX, GAUCHE, -LEPAS, L_ARENE - L_PERSO, lesJoueurs, lesMurs); break;
+	        case DROITE: posX = deplace(action, posX, DROITE, LEPAS, L_ARENE - L_PERSO, lesJoueurs, lesMurs); break;
+	        case BAS: posY = deplace(action, posY, orientation, LEPAS, H_ARENE - H_PERSO, lesJoueurs, lesMurs); break;
+	        case TIRE:
+	            if (!boule.getLabel().getjLabel().isVisible()) {
+	                jeuServeur.envoi(FIGHT);
+	                boule.tireBoule(this, lesMurs, lesJoueurs);
+	            }
+	            break;
+	        case SAUT:
+	            sauter(lesMurs, lesJoueurs);
+	            return; // ⛔️ pas de gravité immédiate si saut
+	    }
+
+	    corrigerPosition();
+	    appliquerGraviteAsync(lesMurs); // ✅ gravité non bloquante
+	    affiche(MARCHE, etape);
 	}
+
 }
 
