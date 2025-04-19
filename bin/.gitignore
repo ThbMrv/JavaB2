@@ -1,0 +1,59 @@
+# === Java ===
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# === Eclipse ===
+.project
+.classpath
+.settings/
+bin/
+tmp/
+target/
+
+# === MacOS ===
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# icônes de fichiers copiés depuis un Mac
+Icon?
+
+# fichiers temporaires
+._*
+.Spotlight-V100
+.Trashes
+
+# === IntelliJ (au cas où tu switches) ===
+.idea/
+*.iml
+out/
+
+# === Maven ===
+/target/
+
+# === Gradle ===
+.gradle/
+build/
+
+# === VS Code (si jamais utilisé) ===
+.vscode/
+
+# === Système / divers ===
+*.swp
+*.bak
+*.tmp
+*.orig
+*.rej
+*.swo
+
+# === Git ===
+*.patch
+*.diff
+*.cache
+
+# === Logs ===
+*.log
+logs/
