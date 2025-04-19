@@ -144,42 +144,51 @@ public class JeuServeur extends Jeu implements Global {
 	}
 	
 	private void ajouterPointEtReset(Joueur joueur) {
-		int score = scores.get(joueur) + 1;
-		scores.put(joueur, score);
+	    int score = scores.get(joueur) + 1;
+	    scores.put(joueur, score);
 
-		String message = joueur.getPseudo() + " marque un point ! (" + score + "/" + SCORE_MAX + ")";
-		controle.evenementModele(this, "ajout phrase", message);
+	    String message = joueur.getPseudo() + " marque un point ! (" + score + "/" + SCORE_MAX + ")";
+	    controle.evenementModele(this, "ajout phrase", message);
 
-		if (score >= SCORE_MAX) {
-			String victoire = "🏆 " + joueur.getPseudo() + " a gagné la partie !";
-			controle.evenementModele(this, "ajout phrase", victoire);
+	    if (score >= SCORE_MAX) {
+	        String victoire = "🏆 " + joueur.getPseudo() + " a gagné la partie !";
+	        controle.evenementModele(this, "ajout phrase", victoire);
+	        partieTerminee = true;
+	        envoi("popup~Fin de la partie ! " + joueur.getPseudo() + " a gagné !");
+	        return;
+	    }
 
-			partieTerminee = true; // ✅ empêche tout mouvement
+	    // ✅ Reset uniquement le joueur qui a marqué
+	    int index = lesJoueursDansLordre.indexOf(joueur);
+	    int xSpawn = (index == 0) ? 0 : (NBMURS - 1) * L_MUR;
+	    int ySpawn = (H_ARENE / 2) - H_PERSO - H_MUR;
+	    joueur.setPosX(xSpawn);
+	    joueur.setPosY(ySpawn);
+	    joueur.affiche(MARCHE, 1);
 
-			// ✅ Envoie une instruction de popup à tous les clients
-			envoi("popup~Fin de la partie ! " + joueur.getPseudo() + " a gagné !");
-			return;
-		}
-		// Seul le joueur qui marque est respawn
-		int index = lesJoueursDansLordre.indexOf(joueur);
-		int xSpawn = (index == 0) ? 0 : (NBMURS - 1) * L_MUR;
-		int ySpawn = (H_ARENE / 2) - H_PERSO - H_MUR;
+	    // ✅ Bloque TOUS les joueurs
+	    for (Joueur j : lesJoueursDansLordre) {
+	        j.setBloque(true);
+	    }
 
-		joueur.setPosX(xSpawn);
-		joueur.setPosY(ySpawn);
-		joueur.affiche(MARCHE, 1);
+	    // ✅ Affiche un seul message de compte à rebours dans le chat
+	    new Thread(() -> {
+	        for (int i = 3; i > 0; i--) {
+	            controle.evenementModele(this, "ajout phrase", "⏳ Respawn dans : " + i);
+	            try {
+	                Thread.sleep(1000);
+	            } catch (InterruptedException e) {
+	                e.printStackTrace();
+	            }
+	        }
 
-		joueur.setBloque(true); // on bloque le joueur
-
-		new Thread(() -> {
-		    try {
-		        Thread.sleep(3000); // 3 secondes
-		        joueur.setBloque(false); // on débloque
-		    } catch (InterruptedException e) {
-		        e.printStackTrace();
-		    }
-		}).start();
+	        for (Joueur j : lesJoueursDansLordre) {
+	            j.setBloque(false); // ✅ débloquer tout le monde après 3s
+	        }
+	    }).start();
 	}
+
+
 
 	
 	@Override

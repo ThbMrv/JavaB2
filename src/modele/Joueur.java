@@ -38,6 +38,7 @@ public class Joueur extends Objet implements Global {
 	private int hauteurActuelle = 0;
 	private boolean bloque = false;
 
+
 	
 	/**
 	 * Constructeur
