@@ -169,6 +169,16 @@ public class JeuServeur extends Jeu implements Global {
 		joueur.setPosY(ySpawn);
 		joueur.affiche(MARCHE, 1);
 
+		joueur.setBloque(true); // on bloque le joueur
+
+		new Thread(() -> {
+		    try {
+		        Thread.sleep(3000); // 3 secondes
+		        joueur.setBloque(false); // on débloque
+		    } catch (InterruptedException e) {
+		        e.printStackTrace();
+		    }
+		}).start();
 	}
 
 	

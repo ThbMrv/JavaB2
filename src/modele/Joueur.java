@@ -36,6 +36,7 @@ public class Joueur extends Objet implements Global {
 	
 	private boolean enSaut = false;
 	private int hauteurActuelle = 0;
+	private boolean bloque = false;
 
 	
 	/**
@@ -72,6 +73,10 @@ public class Joueur extends Objet implements Global {
 		}
 	}
 	
+	public boolean isBloque() {
+	    return bloque;
+	}
+	
 	public void perteVie() {
 		if (vie > 0) {
 			vie -= PERTE;
@@ -102,6 +107,9 @@ public class Joueur extends Objet implements Global {
 	    }
 	}
 
+	public void setBloque(boolean bloque) {
+	    this.bloque = bloque;
+	}
 
 	
 	public void sauter(ArrayList<Mur> lesMurs, Hashtable<Connection, Joueur> lesJoueurs) {
@@ -309,7 +317,7 @@ public class Joueur extends Objet implements Global {
 
 	
 	public void action (int action, ArrayList<Mur> lesMurs, Hashtable<Connection, Joueur> lesJoueurs ) {
-		
+		if (bloque) return;
 		switch (action) {
 		case GAUCHE:posX = deplace(action, posX, GAUCHE, -LEPAS, L_ARENE - L_PERSO, lesJoueurs, lesMurs);break;
         case DROITE:posX = deplace(action, posX, DROITE, LEPAS, L_ARENE - L_PERSO, lesJoueurs, lesMurs);break;
