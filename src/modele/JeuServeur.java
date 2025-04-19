@@ -3,9 +3,13 @@ package modele;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
+import javax.swing.JLabel;
+
 import controleur.Controle;
 import controleur.Global;
 import outils.connexion.Connection;
+import java.awt.Font;
+
 
 /**
  * Gestion du jeu c�t� serveur
@@ -20,6 +24,10 @@ public class JeuServeur extends Jeu implements Global {
 	private Hashtable<Joueur, Integer> scores = new Hashtable<>();
 	private ArrayList<Joueur> lesJoueursDansLordre = new ArrayList<Joueur>() ;
 	private boolean partieTerminee = false;
+	
+	private Label labelTimer;               // Label pour l'affichage du chrono
+	private int dureePartie = 60;           // durée max (en secondes)
+	private boolean timerLance = false;     // pour éviter de le lancer 2 fois
 	
 	/**
 	 * Constructeur
@@ -75,19 +83,22 @@ public class JeuServeur extends Jeu implements Global {
 
 	@Override
 	public void setConnection(Connection connection) {
-		Joueur joueur = new Joueur(this);
+	    Joueur joueur = new Joueur(this);
 
-		int index = lesJoueursDansLordre.size();
-		int xSpawn = (index == 0) ? 0 : (NBMURS - 1) * L_MUR;
-		int ySpawn = (H_ARENE / 2) - H_PERSO - H_MUR; // ✅ spawn juste au-dessus du pont
+	    int index = lesJoueursDansLordre.size();
+	    int xSpawn = (index == 0) ? 0 : (NBMURS - 1) * L_MUR;
+	    int ySpawn = (H_ARENE / 2) - H_PERSO - H_MUR;
 
-		joueur.setPosX(xSpawn);
-		joueur.setPosY(ySpawn);
+	    joueur.setPosX(xSpawn);
+	    joueur.setPosY(ySpawn);
 
-		lesJoueurs.put(connection, joueur);
-		lesJoueursDansLordre.add(joueur);
-		scores.put(joueur, 0);
+	    lesJoueurs.put(connection, joueur);
+	    if (!lesJoueursDansLordre.contains(joueur)) {
+	        lesJoueursDansLordre.add(joueur);
+	    }
+	    scores.put(joueur, 0);
 	}
+
 
 
 	@Override
@@ -97,27 +108,32 @@ public class JeuServeur extends Jeu implements Global {
 		switch(Integer.parseInt(infos[0])) {
 			// un nouveau joueur vient d'arriver
 		case PSEUDO:
+		    // 1. Envoie du panel de murs au nouveau joueur
 		    controle.evenementModele(this, "envoi panel murs", connection);
 
-		    // d'abord on envoie les anciens joueurs (déjà initialisés)
+		    // 2. Envoie des joueurs déjà connectés au nouveau joueur
 		    for (Joueur joueur : lesJoueursDansLordre) {
-		    	super.envoi(connection, joueur.getLabel());
-		    	super.envoi(connection, joueur.getMessage());
+		        super.envoi(connection, joueur.getLabel());
+		        super.envoi(connection, joueur.getMessage());
 
-		    	if (joueur.getBoule() != null) {
-		    		super.envoi(connection, joueur.getBoule().getLabel());
-		    	}
+		        if (joueur.getBoule() != null) {
+		            super.envoi(connection, joueur.getBoule().getLabel());
+		        }
 		    }
-		    // maintenant on initialise le nouveau joueur
+
+		    // 3. Initialisation du nouveau joueur
 		    Joueur nouveau = lesJoueurs.get(connection);
 		    nouveau.initPerso(infos[1], Integer.parseInt(infos[2]), lesJoueurs, lesMurs);
 
-		    // ensuite seulement, on l'ajoute à la liste
-		    lesJoueursDansLordre.add(nouveau);
-
-		    // message de bienvenue
-		    laPhrase = "***" + nouveau.getPseudo() + " vient de se connecter ***";
+		    // 4. Message de bienvenue
+		    laPhrase = "*** " + nouveau.getPseudo() + " vient de se connecter ***";
 		    controle.evenementModele(this, "ajout phrase", laPhrase);
+
+		    // 5. 🕐 Démarrage du chrono si 2 joueurs connectés
+		    if (lesJoueursDansLordre.size() == 2 && !timerLance) {
+		        timerLance = true;
+		        startTimer(); // ⏱ méthode définie dans JeuServeur
+		    }
 		    break;
 			case CHAT :
 				laPhrase = lesJoueurs.get(connection).getPseudo()+" > "+infos[1] ;
@@ -188,7 +204,53 @@ public class JeuServeur extends Jeu implements Global {
 	    }).start();
 	}
 
+	private void startTimer() {
+	    labelTimer = new Label(Label.getNbLabel(), new JLabel());
+	    Label.setNbLabel(Label.getNbLabel() + 1);
+	    labelTimer.getjLabel().setFont(new Font("Arial", Font.BOLD, 16));
+	    labelTimer.getjLabel().setBounds(L_ARENE / 2 - 50, 10, 200, 30); // haut de l'écran
+	    labelTimer.getjLabel().setText("Temps : " + dureePartie);
+	    nouveauLabelJeu(labelTimer);
 
+	    new Thread(() -> {
+	        for (int i = dureePartie; i >= 0; i--) {
+	            final int t = i;
+	            labelTimer.getjLabel().setText("Temps : " + t);
+	            envoi(labelTimer);
+
+	            try {
+	                Thread.sleep(1000);
+	            } catch (InterruptedException e) {
+	                e.printStackTrace();
+	            }
+	        }
+
+	        // ⏰ Temps écoulé : fin de partie
+	        partieTerminee = true;
+
+	        Joueur gagnant = null;
+	        boolean egalite = false;
+
+	        int maxScore = -1;
+	        for (Joueur j : scores.keySet()) {
+	            int sc = scores.get(j);
+	            if (sc > maxScore) {
+	                maxScore = sc;
+	                gagnant = j;
+	                egalite = false;
+	            } else if (sc == maxScore) {
+	                egalite = true;
+	            }
+	        }
+
+	        if (egalite || maxScore == 0) {
+	            envoi("popup~⏱ Temps écoulé ! Égalité !");
+	        } else {
+	            envoi("popup~⏱ Temps écoulé ! " + gagnant.getPseudo() + " gagne avec " + maxScore + " point(s) !");
+	        }
+
+	    }).start();
+	}
 
 	
 	@Override
