@@ -37,16 +37,14 @@ public class JeuClient extends Jeu {
 	        controle.evenementModele(this, "ajout joueur", info);
 	    } else if (info instanceof String) {
 	        String message = (String) info;
-	        // 🔔 popup de fin de partie
+	        // popup
 	        if (message.startsWith("popup~")) {
 	            String texte = message.substring("popup~".length());
 	            javax.swing.JOptionPane.showMessageDialog(null, texte, "🎉 Fin de la partie", javax.swing.JOptionPane.INFORMATION_MESSAGE);
 	            return;
 	        }
-	        // sinon, c'est un message de chat classique
 	        controle.evenementModele(this, "remplace chat", message);
 	    }
-	    // 🎵 sons (hors String)
 	    if (info instanceof Integer) {
 	        controle.evenementModele(this, "son", info);
 	    }

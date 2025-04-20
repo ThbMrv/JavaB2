@@ -13,17 +13,13 @@ import controleur.Global;
  */
 public class Mur extends Objet implements Global {
 
-    /**
-     * Constructeur modifié pour aligner les murs en pont
-     * @param index Position du mur dans la séquence
-     * @param totalMurs Nombre total de murs à créer
-     */
+
     public Mur(int index, int totalMurs) {
 
         // Calcul de l'espacement des murs pour qu'ils soient collés
-        int espace = L_MUR; // Chaque mur est placé juste à côté du précédent
-        posX = index * espace; // Position horizontale alignée
-        posY = H_ARENE / 2; // Alignement au centre de l'arène
+        int espace = L_MUR;
+        posX = index * espace;
+        posY = H_ARENE / 2;
         
         // Création du label pour ce mur
         label = new Label(-1, new JLabel());

@@ -78,13 +78,13 @@ public interface Global {
 		H_CHAT = 200,
 		H_MESSAGE = 8,
 		H_SAISIE = 25,
-		MARGE = 5 ; // �carts entre les objets
+		MARGE = 5 ;
 	
 	// murs
 	public static final int
-		NBMURS = 57, // nombre de murs
-		H_MUR = 30, // hauteur du mur
-		L_MUR = 30 ; // largeur du mur
+		NBMURS = 57,
+		H_MUR = 30,
+		L_MUR = 30 ;
 	
 	public static final int
 		L_BOULE = 17,

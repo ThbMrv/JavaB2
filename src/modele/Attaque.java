@@ -45,7 +45,6 @@ public class Attaque extends Thread implements Global {
 	        pause(10,0);
 	        victime = toucheJoueur();
 	    } while (laBoule.getPosX() >= 0 && laBoule.getPosX() <= L_ARENE && laBoule.getPosY() >= 0 && laBoule.getPosY() <= H_ARENE && !toucheMur() && victime == null);
-	 // ✅ Vérifier que la victime n'est pas null avant d'exécuter `affiche()`
 	    if (victime!=null && !victime.estMort()) {
 	    	jeuServeur.envoi(HURT);
 	    	victime.perteVie();
@@ -87,14 +86,14 @@ public class Attaque extends Thread implements Global {
 
 	                // Si le mur est détruit, on le retire de la liste et on le rend invisible
 	                if (destructible.estDetruit()) {
-	                    destructible.getLabel().getjLabel().setVisible(false);  // Cache le mur
-	                    jeuServeur.envoi(destructible.getLabel());              // Mise à jour client
-	                    lesMurs.remove(i); // Supprime le mur de la liste
-	                    i--; // Reculer d'un indice car la liste a été modifiée
+	                    destructible.getLabel().getjLabel().setVisible(false);
+	                    jeuServeur.envoi(destructible.getLabel());
+	                    lesMurs.remove(i);
+	                    i--;
 	                }
 	            }
 
-	            return true; // Dans tous les cas, la boule est stoppée
+	            return true;
 	        }
 	    }
 
@@ -103,7 +102,7 @@ public class Attaque extends Thread implements Global {
 	
 	private Joueur toucheJoueur() {
 	    for (Joueur joueur : lesJoueurs.values()) {
-	        if (joueur != attaquant && attaquant.getBoule().toucheObjet(joueur)) { // ✅ Vérifie collision
+	        if (joueur != attaquant && attaquant.getBoule().toucheObjet(joueur)) {
 	            return joueur;
 	        }
 	    }

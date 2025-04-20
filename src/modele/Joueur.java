@@ -282,12 +282,6 @@ public class Joueur extends Objet implements Global {
 
 	    // Déplacement
 	    position += lepas;
-
-	    // Vérification des limites de l'arène
-	    //position = Math.max(0, position);
-	    //position = Math.min(max, position);
-
-	    // Mise à jour temporaire des coordonnées
 	    if (action == GAUCHE || action == DROITE) {
 	        this.posX = position;
 	    } else {
@@ -306,7 +300,7 @@ public class Joueur extends Objet implements Global {
 	}
 	
 	public void appliquerGraviteAsync(ArrayList<Mur> lesMurs) {
-	    if (enSaut) return; // ❌ pas de gravité pendant le saut
+	    if (enSaut) return;
 
 	    new Thread(() -> {
 	        while (!toucheSol(lesMurs) && posY + H_PERSO < H_ARENE && !enSaut) {
@@ -326,7 +320,6 @@ public class Joueur extends Objet implements Global {
 	private boolean collisionLaterale(ArrayList<Mur> lesMurs, Hashtable<Connection, Joueur> lesJoueurs) {
 	    for (Mur mur : lesMurs) {
 	        if (toucheObjet(mur)) {
-	            // On ignore les collisions si le joueur est clairement au-dessus du mur
 	            if (posY + H_PERSO <= mur.getPosY() + 5) continue;
 	            return true;
 	        }
@@ -343,12 +336,11 @@ public class Joueur extends Objet implements Global {
 
 	
 	private boolean toucheSol(ArrayList<Mur> lesMurs) {
-	    posY += 1; // On simule un petit déplacement vers le bas
+	    posY += 1;
 	    boolean touche = toucheMur(lesMurs);
-	    posY -= 1; // On annule le déplacement test
+	    posY -= 1;
 	    return touche;
 	}
-
 
 	
 	public void departJoueur(JeuServeur jeuServeur) {
@@ -383,11 +375,11 @@ public class Joueur extends Objet implements Global {
 	            break;
 	        case SAUT:
 	            sauter(lesMurs, lesJoueurs);
-	            return; // ⛔️ pas de gravité immédiate si saut
+	            return;
 	    }
 
 	    corrigerPosition();
-	    appliquerGraviteAsync(lesMurs); // ✅ gravité non bloquante
+	    appliquerGraviteAsync(lesMurs);
 	    affiche(MARCHE, etape);
 	}
 

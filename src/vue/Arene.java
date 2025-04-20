@@ -2,8 +2,6 @@ package vue;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -30,7 +28,7 @@ public class Arene extends JFrame implements Global {
 	private JTextField txtSaisie;
 	private JPanel jpnMurs ;
 	private JPanel jpnJeu ;
-	private boolean client ; // arene du client ou du serveur ?
+	private boolean client ;
 	private Controle controle ;
 	private JTextArea txtChat ;
 	private Son[] lessons = new Son[SON.length]; // Tableau des sons
@@ -75,7 +73,6 @@ public class Arene extends JFrame implements Global {
 	 * @param unLabel
 	 */
 	public void ajoutModifJoueur(int num, JLabel unLabel) {
-		// tentative de suppression
 		try {
 			jpnJeu.remove(num);
 		} catch (ArrayIndexOutOfBoundsException  e) {
@@ -152,12 +149,10 @@ public class Arene extends JFrame implements Global {
 	 * Create the frame.
 	 */
 	public Arene(String typeJeu, Controle controle) {
-		// arene pour un client ou un serveur ?
 		client = (typeJeu.equals("client"));
 		// r�cup�ration du controleur
 		this.controle = controle;
 		
-		// les objets graphiques
 		setTitle("Arena");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, L_ARENE+3*MARGE, H_ARENE + H_CHAT);

@@ -25,9 +25,9 @@ public class JeuServeur extends Jeu implements Global {
 	private ArrayList<Joueur> lesJoueursDansLordre = new ArrayList<Joueur>() ;
 	private boolean partieTerminee = false;
 	
-	private Label labelTimer;               // Label pour l'affichage du chrono
-	private int dureePartie = 60;           // durée max (en secondes)
-	private boolean timerLance = false;     // pour éviter de le lancer 2 fois
+	private Label labelTimer;
+	private int dureePartie = 100;
+	private boolean timerLance = false;
 	
 	/**
 	 * Constructeur
@@ -44,16 +44,13 @@ public class JeuServeur extends Jeu implements Global {
 	 */
 	public void constructionMurs() {
 	    for (int k = 0; k < NBMURS; k++) {
-	        // 1️⃣ Crée d'abord le mur "de sol" (le pont)
 	        Mur murSol = new Mur(k, NBMURS);
 	        lesMurs.add(murSol);
 	        controle.evenementModele(this, "ajout mur", murSol.getLabel().getjLabel());
 
-	        // 2️⃣ Exclure les zones de spawn
 	        int margeSpawn = 4; // nombre de blocs à ne pas bloquer près des bords
 	        if (k < margeSpawn || k > (NBMURS - margeSpawn)) continue;
 
-	        // 3️⃣ 30% de chance d’ajouter un mur destructible AU-DESSUS DU PONT
 	        if (Math.random() < 0.3) {
 	            Mur murDestruct = new MurDestructible(k, NBMURS);
 	            lesMurs.add(murDestruct);
@@ -105,12 +102,9 @@ public class JeuServeur extends Jeu implements Global {
 		String[] infos = ((String)info).split(SEPARE) ;
 		String laPhrase ;
 		switch(Integer.parseInt(infos[0])) {
-			// un nouveau joueur vient d'arriver
 		case PSEUDO:
-		    // 1. Envoie du panel de murs au nouveau joueur
 		    controle.evenementModele(this, "envoi panel murs", connection);
 
-		    // 2. Envoie des joueurs déjà connectés au nouveau joueur
 		    for (Joueur joueur : lesJoueursDansLordre) {
 		        super.envoi(connection, joueur.getLabel());
 		        super.envoi(connection, joueur.getMessage());
@@ -120,18 +114,15 @@ public class JeuServeur extends Jeu implements Global {
 		        }
 		    }
 
-		    // 3. Initialisation du nouveau joueur
 		    Joueur nouveau = lesJoueurs.get(connection);
 		    nouveau.initPerso(infos[1], Integer.parseInt(infos[2]), lesJoueurs, lesMurs);
 
-		    // 4. Message de bienvenue
 		    laPhrase = "*** " + nouveau.getPseudo() + " vient de se connecter ***";
 		    controle.evenementModele(this, "ajout phrase", laPhrase);
 
-		    // 5. 🕐 Démarrage du chrono si 2 joueurs connectés
 		    if (lesJoueursDansLordre.size() == 2 && !timerLance) {
 		        timerLance = true;
-		        startTimer(); // ⏱ méthode définie dans JeuServeur
+		        startTimer();
 		    }
 		    break;
 			case CHAT :
@@ -173,7 +164,6 @@ public class JeuServeur extends Jeu implements Global {
 	        return;
 	    }
 
-	    // ✅ Tous les joueurs respawnent et sont soignés
 	    for (int i = 0; i < lesJoueursDansLordre.size(); i++) {
 	        Joueur j = lesJoueursDansLordre.get(i);
 	        int xSpawn = (i == 0) ? 0 : (NBMURS - 1) * L_MUR;
@@ -181,12 +171,11 @@ public class JeuServeur extends Jeu implements Global {
 
 	        j.setPosX(xSpawn);
 	        j.setPosY(ySpawn);
-	        j.setVie(10);              // 💖 On remet la vie à 10
+	        j.setVie(10);
 	        j.affiche(MARCHE, 1);
-	        j.setBloque(true);         // ⏸ On bloque pour respawn
+	        j.setBloque(true);
 	    }
 
-	    // ✅ Affichage d’un seul message de compte à rebours
 	    new Thread(() -> {
 	        for (int i = 3; i > 0; i--) {
 	            controle.evenementModele(this, "ajout phrase", "⏳ Respawn dans : " + i);
@@ -198,7 +187,7 @@ public class JeuServeur extends Jeu implements Global {
 	        }
 
 	        for (Joueur j : lesJoueursDansLordre) {
-	            j.setBloque(false); // ✅ Tous les joueurs peuvent rejouer
+	            j.setBloque(false);
 	        }
 	    }).start();
 	}
@@ -208,7 +197,7 @@ public class JeuServeur extends Jeu implements Global {
 	    labelTimer = new Label(Label.getNbLabel(), new JLabel());
 	    Label.setNbLabel(Label.getNbLabel() + 1);
 	    labelTimer.getjLabel().setFont(new Font("Arial", Font.BOLD, 16));
-	    labelTimer.getjLabel().setBounds(L_ARENE / 2 - 50, 10, 200, 30); // haut de l'écran
+	    labelTimer.getjLabel().setBounds(L_ARENE / 2 - 50, 10, 200, 30);
 	    labelTimer.getjLabel().setText("Temps : " + dureePartie);
 	    nouveauLabelJeu(labelTimer);
 
@@ -225,7 +214,6 @@ public class JeuServeur extends Jeu implements Global {
 	            }
 	        }
 
-	        // ⏰ Temps écoulé : fin de partie
 	        partieTerminee = true;
 
 	        Joueur gagnant = null;
@@ -253,7 +241,6 @@ public class JeuServeur extends Jeu implements Global {
 	}
 
 	
-	@Override
 	public void deconnection(Connection connection) {
 		// TODO Auto-generated method stub
 		Joueur joueur = lesJoueurs.get(connection);

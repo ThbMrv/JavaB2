@@ -38,10 +38,8 @@ public class Boule extends Objet implements Global{
 	        setPosX(attaquant.getPosX() + L_PERSO + 1);
 	    }
 
-	    //setPosY(attaquant.getPosY() + L_PERSO / 2 - H_BOULE / 2);
 	    setPosY(attaquant.getPosY() + H_PERSO / 2 - H_BOULE / 2);
 
-	    // Lancer l'attaque animée
 	    new Attaque(attaquant, jeuServeur, lesMurs, lesJoueurs);
 	}
 
